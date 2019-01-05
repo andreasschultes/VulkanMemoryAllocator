@@ -1,7 +1,7 @@
 #ifndef AMD_VULKAN_MEMORY_ALLOCATOR_HPP
 #define AMD_VULKAN_MEMORY_ALLOCATOR_HPP
 
-#include <vk_mem_alloc.h>
+#include "./vk_mem_alloc.h"
 #include <vulkan/vulkan.hpp>
 #include <array>
 
@@ -111,6 +111,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
                          PFN_vkDestroyBuffer vkDestroyBuffer_ = nullptr,
                          PFN_vkCreateImage vkCreateImage_ = nullptr,
                          PFN_vkDestroyImage vkDestroyImage_ = nullptr,
+                         PFN_vkCmdCopyBuffer vkCmdCopyBuffer_ = nullptr,
 #if VMA_DEDICATED_ALLOCATION
                          PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR_ = nullptr,
                          PFN_vkGetImageMemoryRequirements2KHR vkGetImageMemoryRequirements2KHR_ = nullptr
@@ -132,6 +133,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
             , vkDestroyBuffer( vkDestroyBuffer_ )
             , vkCreateImage( vkCreateImage_ )
             , vkDestroyImage( vkDestroyImage_ )
+            , vkCmdCopyBuffer( vkCmdCopyBuffer_ )
 #if VMA_DEDICATED_ALLOCATION
             , vkGetBufferMemoryRequirements2KHR( vkGetBufferMemoryRequirements2KHR_ )
             , vkGetImageMemoryRequirements2KHR( vkGetImageMemoryRequirements2KHR_ )
@@ -276,6 +278,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         PFN_vkDestroyBuffer vkDestroyBuffer;
         PFN_vkCreateImage vkCreateImage;
         PFN_vkDestroyImage vkDestroyImage;
+        PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
 #if VMA_DEDICATED_ALLOCATION
         PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR;
         PFN_vkGetImageMemoryRequirements2KHR vkGetImageMemoryRequirements2KHR;
@@ -578,7 +581,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
     struct AllocationInfo
     {
         uint32_t memoryType = 0;
-        VULKAN_HPP_NAMESPACE::DeviceMemory deviceMemory = VK_NULL_HANDLE;
+        VULKAN_HPP_NAMESPACE::DeviceMemory deviceMemory = VULKAN_HPP_NAMESPACE::DeviceMemory();
         DeviceSize offset = 0;
         DeviceSize size = 0;
         void* pMappedData = nullptr;
@@ -609,11 +612,11 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
     class Allocator
     {
     public:
-        VULKAN_HPP_CONSTEXPR Allocator()
+        Allocator()
             : m_allocator(VK_NULL_HANDLE)
         {}
 
-        VULKAN_HPP_CONSTEXPR Allocator( std::nullptr_t )
+        Allocator( std::nullptr_t )
             : m_allocator(VK_NULL_HANDLE)
         {}
 
@@ -1078,8 +1081,12 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
             Buffer buffer;
             Allocation allocation;
             Result result = createBuffer( &bufferCreateInfo, &allocationCreateInfo, &buffer, &allocation, pAllocationInfo );
-
-            return createResultValue( result, std::make_pair( buffer, allocation ), AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::Allocator::createBuffer" );
+            std::pair<Buffer, Allocation> pair=std::make_pair( buffer, allocation );
+            
+            return VULKAN_HPP_NAMESPACE::createResultValue( 
+                result,
+                pair,
+                AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::Allocator::createBuffer" );
         }
 #endif
 
@@ -1110,8 +1117,11 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
             Image image;
             Allocation allocation;
             Result result = createImage( &imageCreateInfo, &allocationCreateInfo, &image, &allocation, pAllocationInfo );
-
-            return createResultValue( result, std::make_pair( image, allocation ), AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::Allocator::createImage" );
+            std::pair<Image, Allocation> pair= std::make_pair( image, allocation );
+            return VULKAN_HPP_NAMESPACE::createResultValue( 
+                result,
+                pair,
+                AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::Allocator::createImage" );
         }
 #endif
 
@@ -1304,39 +1314,9 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         return VULKAN_HPP_NAMESPACE::createResultValue( result, allocator, AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::createAllocator" );
     }
 
-#ifndef VULKAN_HPP_NO_SMART_HANDLE
-	template <typename T>
-	VULKAN_HPP_INLINE typename ResultValueType<UniqueHandle<T>>::type createResultValue(Result result, T & data, char const * message, typename UniqueHandleTraits<T>::deleter const& deleter)
-	{
-		VULKAN_HPP_ASSERT(result == VULKAN_HPP_NAMESPACE::Result::eSuccess);
-		return ResultValue<UniqueHandle<T>>(result, UniqueHandle<T>(data, deleter));
 
-		if (result != VULKAN_HPP_NAMESPACE::Result::eSuccess)
-		{
-			VULKAN_HPP_NAMESPACE::throwResultException(result, message);
-		}
-		return UniqueHandle<T>(data, deleter);
-	}
-#endif//*/
 
-#ifndef VULKAN_HPP_NO_SMART_HANDLE
-    VULKAN_HPP_INLINE typename ResultValueType<UniqueHandle<Allocator>>::type createAllocatorUnique( const AllocatorCreateInfo & createInfo )
-	{
-        Allocator allocator;
-		VULKAN_HPP_NAMESPACE::Result result = static_cast<VULKAN_HPP_NAMESPACE::Result>( vmaCreateAllocator( reinterpret_cast<const VmaAllocatorCreateInfo*>( &createInfo ), reinterpret_cast<VmaAllocator*>( &allocator ) ) );
 
-#ifdef VULKAN_HPP_NO_EXCEPTIONS
-		VULKAN_HPP_ASSERT(result == VULKAN_HPP_NAMESPACE::Result::eSuccess);
-		return VULKAN_HPP_NAMESPACE::ResultValue<UniqueHandle<Allocator>>(result, UniqueHandle<Allocator>(allocator)).value;
-#else
-		if (result != VULKAN_HPP_NAMESPACE::Result::eSuccess)
-		{
-			throwResultException(result, AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE_STRING"::createAllocatorUnique");
-		}
-		return UniqueHandle<Allocator>(allocator);
-#endif
-    }
-#endif /*VULKAN_HPP_NO_SMART_HANDLE*/
 #endif /*VULKAN_HPP_DISABLE_ENHANCED_MODE*/
 
     VULKAN_HPP_INLINE std::string to_string(AllocatorCreateFlagBits value)
