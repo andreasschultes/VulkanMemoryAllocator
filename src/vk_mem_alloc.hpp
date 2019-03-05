@@ -550,6 +550,11 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         uint32_t memoryTypeBits = 0;
         Pool pool = VK_NULL_HANDLE;
         void* pUserData = nullptr;
+    public:
+        operator const VmaAllocationCreateInfo&() const
+        {
+            return *reinterpret_cast<const VmaAllocationCreateInfo*>(this);
+        }
     };
     static_assert( sizeof( AllocationCreateInfo ) == sizeof( VmaAllocationCreateInfo ), "struct and wrapper have different size!" );
 
@@ -1063,7 +1068,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
             const AllocationCreateInfo* pAllocationCreateInfo,
             Buffer* pBuffer,
             Allocation* pAllocation,
-            AllocationInfo* pAllocationInfo )
+            AllocationInfo* pAllocationInfo = nullptr ) const
         {
             return static_cast<Result>( vmaCreateBuffer( m_allocator,
                 reinterpret_cast<const VkBufferCreateInfo*>( pBufferCreateInfo ),
@@ -1076,7 +1081,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
 #ifndef VULKAN_HPP_DISABLE_ENHANCED_MODE
         ResultValueType<std::pair<Buffer, Allocation>>::type createBuffer( const VULKAN_HPP_NAMESPACE::BufferCreateInfo& bufferCreateInfo,
             const AllocationCreateInfo& allocationCreateInfo,
-            AllocationInfo* pAllocationInfo )
+            AllocationInfo* pAllocationInfo = nullptr)
         {
             Buffer buffer;
             Allocation allocation;
@@ -1099,7 +1104,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
             const AllocationCreateInfo* pAllocationCreateInfo,
             Image* pImage,
             Allocation* pAllocation,
-            AllocationInfo* pAllocationInfo )
+            AllocationInfo* pAllocationInfo = nullptr ) const
         {
             return static_cast<Result>( vmaCreateImage( m_allocator,
                 reinterpret_cast<const VkImageCreateInfo*>( pImageCreateInfo ),
@@ -1112,7 +1117,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
 #ifndef VULKAN_HPP_DISABLE_ENHANCED_MODE
         ResultValueType<std::pair<Image, Allocation>>::type createImage( const VULKAN_HPP_NAMESPACE::ImageCreateInfo& imageCreateInfo,
             const AllocationCreateInfo& allocationCreateInfo,
-            AllocationInfo* pAllocationInfo )
+            AllocationInfo* pAllocationInfo = nullptr )
         {
             Image image;
             Allocation allocation;
