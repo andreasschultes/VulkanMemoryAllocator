@@ -92,7 +92,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         eKHRDedicatedAllocation = VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT
     };
 
-	using AllocatorCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocatorCreateFlagBits, VmaAllocatorCreateFlags>;
+	using AllocatorCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocatorCreateFlagBits>;
 
     struct VulkanFunctions {
         VulkanFunctions( PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties_ = nullptr,
@@ -291,7 +291,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         eFlushAfterCall = VMA_RECORD_FLUSH_AFTER_CALL_BIT
     };
 
-	using RecordFlags = VULKAN_HPP_NAMESPACE::Flags<RecordFlagBits, VmaRecordFlags>;
+	using RecordFlags = VULKAN_HPP_NAMESPACE::Flags<RecordFlagBits>;
 
     struct RecordSettings
     {
@@ -508,7 +508,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         eUpperAddress = VMA_ALLOCATION_CREATE_UPPER_ADDRESS_BIT
     };
 
-    using AllocationCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocationCreateFlagBits, VmaAllocationCreateFlags>;
+    using AllocationCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocationCreateFlagBits>;
 
     enum class PoolCreateFlagBits
     {
@@ -516,7 +516,7 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
         eLinearAlgorithm = VMA_POOL_CREATE_LINEAR_ALGORITHM_BIT
     };
 
-    using PoolCreateFlags = VULKAN_HPP_NAMESPACE::Flags<PoolCreateFlagBits, VmaPoolCreateFlags>;
+    using PoolCreateFlags = VULKAN_HPP_NAMESPACE::Flags<PoolCreateFlagBits>;
 
     // TODO Add constructors, operators and setters
     struct StatInfo
@@ -534,8 +534,8 @@ namespace AMD_VULKAN_MEMORY_ALLOCATOR_HPP_NAMESPACE
     // TODO Add constructors, operators and setters
     struct Stats
     {
-        std::array<StatInfo, VK_MAX_MEMORY_TYPES> memoryType = {0};
-        std::array<StatInfo, VK_MAX_MEMORY_HEAPS> memoryHeap = {0};
+        std::array<StatInfo, VK_MAX_MEMORY_TYPES> memoryType = {};
+        std::array<StatInfo, VK_MAX_MEMORY_HEAPS> memoryHeap = {};
         StatInfo total;
     };
     static_assert( sizeof( Stats ) == sizeof( VmaStats ), "struct and wrapper have different size!" );
